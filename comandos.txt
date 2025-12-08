@@ -49,6 +49,9 @@ curl http://localhost:5001/health
 kubectl port-forward -n query svc/query-service 5001:5000
 curl http://localhost:5001/health
 
+kubectl port-forward -n processing svc/processing-service 5001:5000
+curl http://localhost:5001/health
+
 kubectl port-forward -n alerts svc/alerts-service 5003:5000
 curl http://localhost:5003/health
 
