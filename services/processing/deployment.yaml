@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processing
+  namespace: processing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: processing
+  template:
+    metadata:
+      labels:
+        app: processing
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "5000"
+    spec:
+      containers:
+        - name: processing
+          image: earthquake-processing:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_BOOTSTRAP
+              value: my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
+            - name: RAW_TOPIC
+              value: raw-earthquakes
+            - name: PROCESSED_TOPIC
+              value: processed-earthquakes
+            - name: POSTGRES_HOST
+              value: postgres.database.svc.cluster.local
+            - name: POSTGRES_DB
+              value: earthquakes
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: example
+          ports:
+            - containerPort: 5000

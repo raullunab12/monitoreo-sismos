@@ -1,0 +1,60 @@
+kubectl version --client
+docker --version
+
+kubectl config use-context docker-desktop
+kubectl get nodes
+
+
+kubectl apply -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/namespaces/
+kubectl get ns
+
+kubectl create ns kafka-operator
+kubectl apply -f https://strimzi.io/install/latest?namespace=kafka-operator -n kafka-operator
+
+kubectl apply -n kafka -f https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.44.0/strimzi-cluster-operator-0.44.0.yaml
+
+kubectl apply -f https://strimzi.io/examples/latest/kafka/kafka-single-node.yaml -n kafka 
+kubectl apply -n kafka -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/strimzi/topics/
+
+
+kubectl apply -n database -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/database/postgres
+.yaml
+kubectl apply -n database -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/database/init-job.yaml
+
+cd /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos
+chmod +x docker-build.sh
+./docker-build.sh
+
+
+kubectl apply -n observability -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/observability/prometheus/
+kubectl apply -n observability -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/observability/grafana/
+kubectl apply -n observability -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/k8s/observability/jaeger/
+
+kubectl patch deployment prometheus -n observability \
+  --type='json' \
+  -p='[{"op": "replace", "path": "/spec/template/spec/serviceAccountName", "value": "prometheus"}]'
+
+kubectl delete pod -n observability -l app=prometheus
+
+kubectl apply -n ingestion  -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/services/ingestion/
+kubectl apply -n processing  -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/services/processing/
+kubectl apply -n alerts  -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/services/alerts/
+kubectl apply -n query  -f /mnt/c/Users/Raull/Documents/projects/monitoreo-sismos/services/query/
+
+kubectl delete pod -n query -l app=query
+
+kubectl port-forward -n ingestion svc/ingestion-service 5001:5000
+curl http://localhost:5001/health
+
+kubectl port-forward -n query svc/query-service 5001:5000
+curl http://localhost:5001/health
+
+kubectl port-forward -n alerts svc/alerts-service 5003:5000
+curl http://localhost:5003/health
+
+kubectl logs -n ingestion deployment/ingestion -f
+kubectl logs -n processing deployment/processing -f
+kubectl logs -n alerts deployment/alerts -f
+
+Grafana
+http://localhost:32000/?orgId=1

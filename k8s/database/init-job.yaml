@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-init-earthquakes
+  namespace: database
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: postgres:15
+          env:
+            - name: PGPASSWORD
+              value: example
+          command: ["bash", "-c"]
+          args:
+            - |
+              until pg_isready -h postgres -p 5432 -U postgres; do
+                echo "Waiting for postgres...";
+                sleep 3;
+              done;
+              psql -h postgres -U postgres -d earthquakes <<'SQL'
+              CREATE TABLE IF NOT EXISTS earthquakes (
+                  id SERIAL PRIMARY KEY,
+                  event_id TEXT,
+                  magnitude FLOAT,
+                  depth FLOAT,
+                  latitude FLOAT,
+                  longitude FLOAT,
+                  timestamp TIMESTAMP,
+                  place TEXT,
+                  severity_level TEXT,
+                  raw JSONB
+              );
+              SQL

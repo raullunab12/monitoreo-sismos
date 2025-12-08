@@ -1,0 +1,6 @@
+flask
+flask-swagger-ui
+requests
+kafka-python
+python-dotenv
+prometheus-client

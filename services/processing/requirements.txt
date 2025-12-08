@@ -1,0 +1,5 @@
+flask
+kafka-python
+python-dotenv
+prometheus-client
+psycopg2-binary

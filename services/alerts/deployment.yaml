@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alerts
+  namespace: alerts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alerts
+  template:
+    metadata:
+      labels:
+        app: alerts
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "5000"
+    spec:
+      containers:
+        - name: alerts
+          image: earthquake-alerts:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_BOOTSTRAP
+              value: my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
+            - name: PROCESSED_TOPIC
+              value: processed-earthquakes
+          ports:
+            - containerPort: 5000
